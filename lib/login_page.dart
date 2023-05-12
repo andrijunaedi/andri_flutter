@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
 
-class LoginPage extends StatelessWidget {
-  Widget LoginTitle() {
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<StatefulWidget> createState() {
+    return LoginPageState();
+  }
+}
+
+class LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  bool isShowPassword = false;
+
+  Widget loginTitle() {
     return Container(
       margin: const EdgeInsets.only(top: 30),
       child: Center(
@@ -48,10 +60,17 @@ class LoginPage extends StatelessWidget {
                   ),
                   Expanded(
                       child: TextFormField(
-                    decoration: const InputDecoration.collapsed(
-                      hintText: 'Email',
-                    ),
-                  ))
+                          decoration: const InputDecoration.collapsed(
+                            hintText: 'Email',
+                          ),
+                          validator: (value) {
+                            final emailRegex = RegExp(
+                                r'^[a-zA-Z0-9.!#$%&\*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$');
+
+                            return (!emailRegex.hasMatch(value!))
+                                ? 'Email is invalid'
+                                : null;
+                          }))
                 ],
               ),
             ),
@@ -87,12 +106,27 @@ class LoginPage extends StatelessWidget {
                     width: 16,
                   ),
                   Expanded(
+                      // vcre
                       child: TextFormField(
-                    obscureText: true,
-                    decoration: const InputDecoration.collapsed(
-                      hintText: 'Password',
+                          obscureText: !isShowPassword,
+                          decoration: const InputDecoration.collapsed(
+                            hintText: 'Password',
+                          ),
+                          validator: (value) => (value == null || value.isEmpty)
+                              ? 'Please enter password'
+                              : null)),
+                  // Add password visibility toggle
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isShowPassword = !isShowPassword;
+                      });
+                    },
+                    child: Icon(
+                      isShowPassword ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.grey,
                     ),
-                  ))
+                  )
                 ],
               ),
             ),
@@ -108,7 +142,14 @@ class LoginPage extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.only(top: 30),
       child: TextButton(
-          onPressed: () => print('Handle Login'),
+          onPressed: () => {
+                if (_formKey.currentState!.validate())
+                  {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Processing Data')),
+                    )
+                  }
+              },
           style: TextButton.styleFrom(
             backgroundColor: Colors.green,
             shape: RoundedRectangleBorder(
@@ -129,19 +170,21 @@ class LoginPage extends StatelessWidget {
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Container(
-          margin: const EdgeInsets.symmetric(
-            horizontal: 30,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              LoginTitle(),
-              emailInput(),
-              passwordInput(),
-              signInButton()
-            ],
-          ),
-        ),
+            margin: const EdgeInsets.symmetric(
+              horizontal: 30,
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  loginTitle(),
+                  emailInput(),
+                  passwordInput(),
+                  signInButton()
+                ],
+              ),
+            )),
       ),
     );
   }
